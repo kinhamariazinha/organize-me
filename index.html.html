@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordem Total</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ===== AUTH SCREEN ===== */
+#authScreen {
+  position: fixed;
+  inset: 0;
+  background: #0e0c0a;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+#authScreen::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.auth-box {
+  background: #1a1714;
+  border: 1px solid #2e2820;
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 900;
+  color: #f0e8d8;
+  margin-bottom: 4px;
+}
+
+.auth-logo span { color: #c8a96e; }
+
+.auth-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #c8a96e;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  display: block;
+}
+
+.auth-subtitle {
+  font-size: 13px;
+  color: #7a6e5e;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.auth-field {
+  margin-bottom: 14px;
+}
+
+.auth-field label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #7a6e5e;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.auth-field input {
+  width: 100%;
+  background: #242018;
+  border: 1px solid #2e2820;
+  border-radius: 8px;
+  color: #d4c8b8;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.auth-field input:focus { border-color: rgba(200,169,110,0.5); }
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  background: #c8a96e;
+  color: #0e0c0a;
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.auth-btn:hover { background: #e8c98e; transform: translateY(-1px); }
+
+.auth-error {
+  color: #c47a6a;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  margin-top: 10px;
+  text-align: center;
+  min-height: 18px;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12px;
+  color: #7a6e5e;
+}
+
+.auth-switch button {
+  background: none;
+  border: none;
+  color: #c8a96e;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* Admin panel */
+#adminPanel {
+  position: fixed;
+  inset: 0;
+  background: rgba(14,12,10,0.95);
+  z-index: 8888;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+#adminPanel.open { display: flex; }
+
+.admin-box {
+  background: #1a1714;
+  border: 1px solid #2e2820;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.admin-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: #f0e8d8;
+  margin-bottom: 4px;
+}
+
+.admin-sub {
+  font-size: 12px;
+  color: #7a6e5e;
+  margin-bottom: 24px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.user-list { margin-bottom: 24px; }
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #242018;
+  border: 1px solid #2e2820;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.user-item-name {
+  flex: 1;
+  font-size: 14px;
+  color: #d4c8b8;
+  font-weight: 500;
+}
+
+.user-item-role {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.role-admin { background: rgba(200,169,110,0.15); color: #c8a96e; }
+.role-user  { background: rgba(106,122,138,0.15); color: #6a7a8a; }
+
+.user-del-btn {
+  background: none;
+  border: none;
+  color: #7a6e5e;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.user-del-btn:hover { color: #c47a6a; }
+
+.admin-section-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #7a6e5e;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.admin-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-row input {
+  flex: 1;
+  min-width: 120px;
+  background: #242018;
+  border: 1px solid #2e2820;
+  border-radius: 8px;
+  color: #d4c8b8;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.admin-row input:focus { border-color: rgba(200,169,110,0.4); }
+
+.admin-row select {
+  background: #242018;
+  border: 1px solid #2e2820;
+  border-radius: 8px;
+  color: #d4c8b8;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-add-btn {
+  padding: 10px 18px;
+  background: #c8a96e;
+  color: #0e0c0a;
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.admin-add-btn:hover { background: #e8c98e; }
+
+.admin-error { color: #c47a6a; font-size: 12px; font-family: 'DM Mono', monospace; margin-top: 6px; min-height: 16px; }
+
+.admin-close-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: #7a6e5e;
+  border: 1px solid #2e2820;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.admin-close-btn:hover { color: #d4c8b8; border-color: #5e5040; }
+
+/* User badge in header */
+#userBadge {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  display: none;
+  gap: 8px;
+}
+
+#userBadge.visible { display: flex; }
+
+.user-badge-name {
+  background: #1a1714;
+  border: 1px solid #2e2820;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #7a6e5e;
+}
+
+.user-badge-btn {
+  background: #1a1714;
+  border: 1px solid #2e2820;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #7a6e5e;
+  transition: color 0.2s;
+}
+
+.user-badge-btn:hover { color: #c8a96e; }
+</style>
+  :root {
+    --bg: #0e0c0a;
+    --surface: #1a1714;
+    --surface2: #242018;
+    --gold: #c8a96e;
+    --gold-light: #e8c98e;
+    --cream: #f0e8d8;
+    --sage: #7a9e7e;
+    --rose: #c47a6a;
+    --slate: #6a7a8a;
+    --text: #d4c8b8;
+    --text-dim: #7a6e5e;
+    --border: #2e2820;
+    --accent: #c8a96e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 8vw, 64px);
+    font-weight: 900;
+    color: var(--cream);
+    line-height: 1.05;
+    letter-spacing: -1px;
+  }
+
+  h1 span {
+    color: var(--gold);
+  }
+
+  .header-sub {
+    margin-top: 16px;
+    font-size: 15px;
+    color: var(--text-dim);
+    font-weight: 300;
+    max-width: 480px;
+    line-height: 1.6;
+  }
+
+  /* XP Bar */
+  .xp-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .xp-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--rose));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
+  .xp-info { flex: 1; }
+
+  .xp-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .xp-level {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  .xp-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .xp-bar-bg {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+  }
+
+  .xp-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 16px;
+    opacity: 0.3;
+    transition: opacity 0.3s, transform 0.3s;
+    cursor: default;
+  }
+
+  .badge.earned {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .tab.active {
+    background: var(--surface2);
+    color: var(--cream);
+    border: 1px solid var(--border);
+  }
+
+  .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Section title */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 6px;
+  }
+
+  .section-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  /* Time selector */
+  .time-select {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .time-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .time-btn.active, .time-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(200,169,110,0.08);
+  }
+
+  /* Mission cards */
+  .missions { display: flex; flex-direction: column; gap: 10px; }
+
+  .mission-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mission-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--gold);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .mission-card:hover { border-color: rgba(200,169,110,0.3); transform: translateX(2px); }
+  .mission-card:hover::before { opacity: 1; }
+
+  .mission-card.done {
+    opacity: 0.5;
+    border-color: var(--sage);
+  }
+
+  .mission-card.done::before {
+    background: var(--sage);
+    opacity: 1;
+  }
+
+  .mission-check {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    transition: all 0.2s;
+    background: var(--surface2);
+  }
+
+  .mission-card.done .mission-check {
+    background: var(--sage);
+    border-color: var(--sage);
+  }
+
+  .mission-body { flex: 1; }
+
+  .mission-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--cream);
+    margin-bottom: 3px;
+  }
+
+  .mission-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .mission-xp {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Notes capture */
+  .note-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .note-type-btn {
+    padding: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .note-type-btn:hover, .note-type-btn.active {
+    border-color: var(--gold);
+    background: rgba(200,169,110,0.06);
+  }
+
+  .note-type-icon { font-size: 20px; margin-bottom: 6px; display: block; }
+  .note-type-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cream);
+    display: block;
+  }
+  .note-type-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    display: block;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 14px 16px;
+    resize: vertical;
+    transition: border-color 0.2s;
+    outline: none;
+    margin-bottom: 12px;
+  }
+
+  textarea:focus, input[type="text"]:focus {
+    border-color: rgba(200,169,110,0.5);
+  }
+
+  textarea { min-height: 100px; }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  /* Notes list */
+  .notes-list { margin-top: 24px; display: flex; flex-direction: column; gap: 8px; }
+
+  .note-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .note-tag {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .tag-task { background: rgba(196,122,106,0.2); color: var(--rose); }
+  .tag-thought { background: rgba(106,122,138,0.2); color: var(--slate); }
+  .tag-meeting { background: rgba(122,158,126,0.2); color: var(--sage); }
+  .tag-note { background: rgba(200,169,110,0.2); color: var(--gold); }
+
+  .note-text { font-size: 13px; color: var(--text); line-height: 1.5; flex: 1; }
+
+  .note-del {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .note-del:hover { color: var(--rose); }
+
+  /* Document guide */
+  .doc-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .doc-category {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .doc-category-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .doc-category-header:hover { background: var(--surface2); }
+
+  .doc-cat-icon { font-size: 20px; }
+
+  .doc-cat-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--cream);
+    flex: 1;
+  }
+
+  .doc-cat-chevron {
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: transform 0.3s;
+  }
+
+  .doc-category.open .doc-cat-chevron { transform: rotate(180deg); }
+
+  .doc-category-body {
+    display: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .doc-category.open .doc-category-body { display: block; }
+
+  .doc-item {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .doc-item:last-child { border-bottom: none; }
+
+  .doc-item-name { font-size: 13px; color: var(--text); flex: 1; }
+
+  .doc-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .time-perm { background: rgba(200,169,110,0.15); color: var(--gold); }
+  .time-long { background: rgba(122,158,126,0.15); color: var(--sage); }
+  .time-mid { background: rgba(106,122,138,0.15); color: var(--slate); }
+  .time-short { background: rgba(196,122,106,0.15); color: var(--rose); }
+
+  /* Object decision */
+  .decision-flow {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .decision-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+
+  .decision-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .decision-questions { display: flex; flex-direction: column; gap: 10px; }
+
+  .dq {
+    font-size: 14px;
+    color: var(--text);
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border-left: 3px solid var(--border);
+    line-height: 1.5;
+  }
+
+  .dq.highlight { border-left-color: var(--gold); }
+
+  .decision-result {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: none;
+  }
+
+  .result-guardar { background: rgba(122,158,126,0.15); border: 1px solid rgba(122,158,126,0.3); color: var(--sage); }
+  .result-descartar { background: rgba(196,122,106,0.15); border: 1px solid rgba(196,122,106,0.3); color: var(--rose); }
+  .result-consertar { background: rgba(200,169,110,0.15); border: 1px solid rgba(200,169,110,0.3); color: var(--gold); }
+
+  /* Object checker interactive */
+  .obj-checker { margin-bottom: 28px; }
+
+  .obj-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .obj-input-row input { margin-bottom: 0; flex: 1; }
+
+  .obj-question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .obj-q-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--cream);
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+
+  .obj-answers {
+    display: flex;
+    gap: 10px;
+  }
+
+  .obj-ans-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .obj-ans-btn:hover { border-color: var(--gold); color: var(--cream); }
+
+  .obj-result-card {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+
+  .obj-result-emoji { font-size: 48px; margin-bottom: 12px; }
+  .obj-result-action {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+  .obj-result-why { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; }
+
+  /* Closet section */
+  .closet-rule {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .closet-rule-icon { font-size: 22px; flex-shrink: 0; }
+  .closet-rule-title { font-size: 14px; font-weight: 500; color: var(--cream); margin-bottom: 4px; }
+  .closet-rule-body { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--gold);
+    color: var(--bg);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* Progress rings in header */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    flex: 1;
+    min-width: 90px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  /* Pill label */
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .pill-gold { background: rgba(200,169,110,0.15); color: var(--gold); }
+  .pill-sage { background: rgba(122,158,126,0.15); color: var(--sage); }
+  .pill-rose { background: rgba(196,122,106,0.15); color: var(--rose); }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .pulse { animation: pulse 2s infinite; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel.active { animation: fadeUp 0.3s ease; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .empty-state-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">Ordem<span>Total</span></div>
+    <span class="auth-label">✦ sistema pessoal de ordem</span>
+
+    <!-- SETUP (primeiro acesso) -->
+    <div id="authSetup">
+      <div class="auth-subtitle">Primeiro acesso. Crie sua conta de administradora.</div>
+      <div class="auth-field">
+        <label>Seu nome</label>
+        <input type="text" id="setupName" placeholder="Ex: Erica" />
+      </div>
+      <div class="auth-field">
+        <label>Crie uma senha</label>
+        <input type="password" id="setupPass" placeholder="Mínimo 4 caracteres" />
+      </div>
+      <div class="auth-field">
+        <label>Confirme a senha</label>
+        <input type="password" id="setupPass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')setupAccount()" />
+      </div>
+      <button class="auth-btn" onclick="setupAccount()">Criar conta e entrar</button>
+      <div class="auth-error" id="setupError"></div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="authLogin" style="display:none">
+      <div class="auth-subtitle">Bem-vinda de volta.</div>
+      <div class="auth-field">
+        <label>Nome</label>
+        <input type="text" id="loginName" placeholder="Seu nome" />
+      </div>
+      <div class="auth-field">
+        <label>Senha</label>
+        <input type="password" id="loginPass" placeholder="Sua senha" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <button class="auth-btn" onclick="doLogin()">Entrar</button>
+      <div class="auth-error" id="loginError"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="admin-box">
+    <div class="admin-title">Gerenciar Usuárias</div>
+    <div class="admin-sub">Apenas administradoras podem acessar este painel</div>
+
+    <div class="admin-section-title">Usuárias ativas</div>
+    <div class="user-list" id="adminUserList"></div>
+
+    <div class="admin-section-title" style="margin-top:20px">Adicionar nova usuária</div>
+    <div class="admin-row">
+      <input type="text" id="newUserName" placeholder="Nome" />
+      <input type="password" id="newUserPass" placeholder="Senha" />
+      <select id="newUserRole">
+        <option value="user">Usuária</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="admin-row">
+      <button class="admin-add-btn" onclick="addUser()">+ Adicionar</button>
+    </div>
+    <div class="admin-error" id="adminError"></div>
+    <button class="admin-close-btn" onclick="closeAdmin()">Fechar painel</button>
+  </div>
+</div>
+
+<!-- USER BADGE -->
+<div id="userBadge">
+  <span class="user-badge-name" id="userBadgeName"></span>
+  <button class="user-badge-btn" id="adminBtn" onclick="openAdmin()" style="display:none">⚙️ Admin</button>
+  <button class="user-badge-btn" onclick="doLogout()">Sair</button>
+</div>
+
+  <div class="header">
+    <div class="header-label">✦ sistema pessoal de ordem</div>
+    <h1>Ordem<br><span>Total</span></h1>
+    <p class="header-sub">Um sistema vivo para organizar papéis, objetos, notas e guardaroupa — no tempo que você tem, do jeito que funciona.</p>
+  </div>
+
+  <!-- XP / Gamificação -->
+  <div class="xp-section">
+    <div class="xp-avatar" id="xpAvatar">1</div>
+    <div class="xp-info">
+      <div class="xp-top">
+        <span class="xp-level">NÍVEL <span id="levelNum">1</span> — <span id="levelName">Iniciante</span></span>
+        <span class="xp-count"><span id="xpVal">0</span> / <span id="xpNext">100</span> XP</span>
+      </div>
+      <div class="xp-bar-bg">
+        <div class="xp-bar-fill" id="xpBar"></div>
+      </div>
+      <div class="xp-badges">
+        <span class="badge" id="badge1" title="Primeira nota">📝</span>
+        <span class="badge" id="badge2" title="Primeira missão completa">⚡</span>
+        <span class="badge" id="badge3" title="5 missões completas">🏆</span>
+        <span class="badge" id="badge4" title="Primeiro objeto decidido">🧹</span>
+        <span class="badge" id="badge5" title="Nível 3 atingido">🌟</span>
+        <span class="badge" id="badge6" title="Guardião de documentos">📁</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <span class="stat-num" id="statMissions">0</span>
+      <span class="stat-label">missões</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num" id="statNotes">0</span>
+      <span class="stat-label">notas</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num" id="statObjects">0</span>
+      <span class="stat-label">objetos</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num" id="statStreak">0</span>
+      <span class="stat-label">dias ativo</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('missoes')">
+      <span class="tab-icon">⚡</span>Missões
+    </button>
+    <button class="tab" onclick="switchTab('notas')">
+      <span class="tab-icon">📝</span>Notas
+    </button>
+    <button class="tab" onclick="switchTab('docs')">
+      <span class="tab-icon">📁</span>Docs
+    </button>
+    <button class="tab" onclick="switchTab('objetos')">
+      <span class="tab-icon">🧹</span>Objetos
+    </button>
+    <button class="tab" onclick="switchTab('roupa')">
+      <span class="tab-icon">👗</span>Roupa
+    </button>
+  </div>
+
+  <!-- PAINEL MISSÕES -->
+  <div class="panel active" id="panel-missoes">
+    <div class="section-title">Missões de Hoje</div>
+    <div class="section-desc">Escolha quanto tempo você tem agora. O sistema mostra só o que cabe.</div>
+
+    <div class="time-select">
+      <button class="time-btn active" onclick="filterTime('all', this)">Tudo</button>
+      <button class="time-btn" onclick="filterTime('5', this)">5 min</button>
+      <button class="time-btn" onclick="filterTime('15', this)">15 min</button>
+      <button class="time-btn" onclick="filterTime('30', this)">30 min</button>
+      <button class="time-btn" onclick="filterTime('60', this)">1 hora</button>
+    </div>
+
+    <div class="missions" id="missionList"></div>
+  </div>
+
+  <!-- PAINEL NOTAS -->
+  <div class="panel" id="panel-notas">
+    <div class="section-title">Captura de Notas</div>
+    <div class="section-desc">Jogue tudo aqui. Classifique depois — ou agora se preferir.</div>
+
+    <div class="note-types">
+      <button class="note-type-btn active" onclick="selectNoteType('task', this)">
+        <span class="note-type-icon">✅</span>
+        <span class="note-type-label">Tarefa</span>
+        <span class="note-type-desc">Algo pra fazer</span>
+      </button>
+      <button class="note-type-btn" onclick="selectNoteType('thought', this)">
+        <span class="note-type-icon">💭</span>
+        <span class="note-type-label">Pensamento</span>
+        <span class="note-type-desc">Ideia livre</span>
+      </button>
+      <button class="note-type-btn" onclick="selectNoteType('meeting', this)">
+        <span class="note-type-icon">🗣️</span>
+        <span class="note-type-label">Reunião</span>
+        <span class="note-type-desc">Anotação de encontro</span>
+      </button>
+      <button class="note-type-btn" onclick="selectNoteType('note', this)">
+        <span class="note-type-icon">📌</span>
+        <span class="note-type-label">Nota livre</span>
+        <span class="note-type-desc">Qualquer coisa</span>
+      </button>
+    </div>
+
+    <textarea id="noteInput" placeholder="Digite ou cole aqui..."></textarea>
+    <button class="btn btn-primary" onclick="addNote()">Salvar nota +10 XP</button>
+
+    <div class="notes-list" id="notesList">
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        Nenhuma nota ainda. Comece capturando qualquer coisa.
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL DOCUMENTOS -->
+  <div class="panel" id="panel-docs">
+    <div class="section-title">Guia de Documentos</div>
+    <div class="section-desc">O que guardar, o que digitalizar, o que descartar. Por quanto tempo.</div>
+
+    <div class="doc-grid" id="docGrid"></div>
+
+    <div class="divider"></div>
+
+    <div class="section-title" style="font-size:16px; margin-bottom:8px;">📋 Exames & Saúde — Regra de Ouro</div>
+    <div class="closet-rule">
+      <div class="closet-rule-icon">🩺</div>
+      <div>
+        <div class="closet-rule-title">Exames de rotina (hemograma, colesterol, etc.)</div>
+        <div class="closet-rule-body">Guarde os últimos 5 anos digitalizados. Físico só o último ano. Anteriores: descarte.</div>
+      </div>
+    </div>
+    <div class="closet-rule">
+      <div class="closet-rule-icon">🔬</div>
+      <div>
+        <div class="closet-rule-title">Exames especializados (biópsia, imagem, patologia)</div>
+        <div class="closet-rule-body">Guarde para sempre digitalmente. Físico: mínimo 10 anos. São histórico médico.</div>
+      </div>
+    </div>
+    <div class="closet-rule">
+      <div class="closet-rule-icon">💊</div>
+      <div>
+        <div class="closet-rule-title">Receitas e prescrições antigas</div>
+        <div class="closet-rule-body">Controle contínuo: guarde 3 anos. Uso pontual: após término do tratamento, descarte.</div>
+      </div>
+    </div>
+    <div class="closet-rule">
+      <div class="closet-rule-icon">📅</div>
+      <div>
+        <div class="closet-rule-title">Retornos agendados</div>
+        <div class="closet-rule-body">Fotografe o comprovante assim que agendar. Guarde no celular em pasta "Saúde 2025".</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL OBJETOS -->
+  <div class="panel" id="panel-objetos">
+    <div class="section-title">Decisor de Objetos</div>
+    <div class="section-desc">Sem culpa, sem nostalgia. Responda 4 perguntas e o sistema decide.</div>
+
+    <div class="obj-checker">
+      <div class="obj-input-row">
+        <input type="text" id="objName" placeholder="Nome do objeto (ex: óculos Ray-Ban)" />
+        <button class="btn btn-primary" onclick="startObjFlow()">Analisar</button>
+      </div>
+    </div>
+
+    <div class="obj-question-card" id="objQuestionCard" style="display:none">
+      <div class="obj-q-text" id="objQText"></div>
+      <div class="obj-answers" id="objAnswers"></div>
+    </div>
+
+    <div class="obj-result-card" id="objResultCard">
+      <div class="obj-result-emoji" id="objResultEmoji"></div>
+      <div class="obj-result-action" id="objResultAction"></div>
+      <div class="obj-result-why" id="objResultWhy"></div>
+      <button class="btn btn-ghost" onclick="resetObj()" style="margin: 0 auto; display:block">Analisar outro objeto</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title" style="font-size:16px; margin-bottom:8px;">Sobre os seus óculos Ray-Ban</div>
+    <div class="closet-rule">
+      <div class="closet-rule-icon">🕶️</div>
+      <div>
+        <div class="closet-rule-title">A regra do "quebra-galho"</div>
+        <div class="closet-rule-body">Se você já tem outros óculos funcionais e esses não são confortáveis, eles estão ocupando espaço mental. Conserto de lente em armação desgastada raramente vale: o custo pode chegar a 60–80% de um óculos novo.</div>
+      </div>
+    </div>
+    <div class="closet-rule">
+      <div class="closet-rule-icon">💡</div>
+      <div>
+        <div class="closet-rule-title">Recomendação direta</div>
+        <div class="closet-rule-body">Se você não usa com prazer, doe ou descarte. Guardar "pra emergência" raramente acontece na prática — e mantém a mente presa ao objeto.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL ROUPA -->
+  <div class="panel" id="panel-roupa">
+    <div class="section-title">Sistema do Guardaroupa</div>
+    <div class="section-desc">Roupas em limbo consomem energia. Estas regras resolvem cada caso.</div>
+
+    <div class="closet-rule">
+      <div class="closet-rule-icon">🔄</div>
+      <div>
+        <div class="closet-rule-title">Regra do Cabide Invertido</div>
+        <div class="closet-rule-body">Vire todos os cabides para fora. Quando usar, coloque de volta na direção certa. Em 3 meses, o que ainda estiver invertido — você não usa. Doe.</div>
+      </div>
+    </div>
+
+    <div class="closet-rule">
+      <div class="closet-rule-icon">🩹</div>
+      <div>
+        <div class="closet-rule-title">Roupas "quase boas"</div>
+        <div class="closet-rule-body">Crie uma caixa temporária chamada "Conserto". Se em 30 dias você não consertou, a peça vai para doação. A intenção de consertar raramente vira ação sem prazo.</div>
+      </div>
+    </div>
+
+    <div class="closet-rule">
+      <div class="closet-rule-icon">💼</div>
+      <div>
+        <div class="closet-rule-title">Roupa "quebra-galho" enquanto não compra melhor</div>
+        <div class="closet-rule-body">Seja honesta: você vai usar isso no próximo mês? Se sim, guarde com etiqueta mental "temporária". Se não vai usar de jeito nenhum, não serve de reserva — só de bagunça.</div>
+      </div>
+    </div>
+
+    <div class="closet-rule">
+      <div class="closet-rule-icon">👠</div>
+      <div>
+        <div class="closet-rule-title">Sapatos com problema</div>
+        <div class="closet-rule-body">Defina agora: vale consertar? (Regra: conserto deve custar menos que 30% do valor de um sapato novo similar.) Se vale, leve esta semana. Se não, doe — mesmo que "ainda sirva".</div>
+      </div>
+    </div>
+
+    <div class="closet-rule">
+      <div class="closet-rule-icon">📦</div>
+      <div>
+        <div class="closet-rule-title">As 4 caixas do guardaroupa</div>
+        <div class="closet-rule-body">
+          <strong style="color:var(--sage)">🟢 Fica</strong> — uso frequente e conforto real<br>
+          <strong style="color:var(--gold)">🟡 Conserto</strong> — vale arrumar, prazo de 30 dias<br>
+          <strong style="color:var(--slate)">🔵 Doe/Troca</strong> — bom estado, não uso mais<br>
+          <strong style="color:var(--rose)">🔴 Descarte</strong> — desgastado, sem condição de doação
+        </div>
+      </div>
+    </div>
+
+    <div class="closet-rule">
+      <div class="closet-rule-icon">🧺</div>
+      <div>
+        <div class="closet-rule-title">Temporada</div>
+        <div class="closet-rule-body">Roupas fora de temporada vão em caixas identificadas, longe do armário principal. Menos visual = menos peso mental.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== STATE ==========
+let state = {
+  xp: 0,
+  level: 1,
+  missions: [],
+  notes: [],
+  objCount: 0,
+  streak: 1,
+  badges: []
+};
+
+// Load from localStorage
+try {
+  const saved = localStorage.getItem('ordemTotal');
+  if (saved) state = { ...state, ...JSON.parse(saved) };
+} catch(e) {}
+
+function save() {
+  try { localStorage.setItem('ordemTotal', JSON.stringify(state)); } catch(e) {}
+}
+
+// ========== LEVELS ==========
+const levels = [
+  { min: 0, name: 'Iniciante', xpNext: 100 },
+  { min: 100, name: 'Organizador', xpNext: 250 },
+  { min: 250, name: 'Guardião', xpNext: 500 },
+  { min: 500, name: 'Arquivista', xpNext: 900 },
+  { min: 900, name: 'Mestre da Ordem', xpNext: 1500 },
+  { min: 1500, name: 'Lenda', xpNext: 9999 },
+];
+
+function getCurrentLevel() {
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (state.xp >= levels[i].min) return { ...levels[i], index: i + 1 };
+  }
+  return { ...levels[0], index: 1 };
+}
+
+function addXP(amount) {
+  state.xp += amount;
+  const lv = getCurrentLevel();
+  state.level = lv.index;
+  save();
+  updateXPUI();
+  showToast(`+${amount} XP ✦`);
+}
+
+function updateXPUI() {
+  const lv = getCurrentLevel();
+  const nextLv = levels[lv.index] || levels[levels.length - 1];
+  const prevMin = levels[lv.index - 1]?.min || 0;
+  const pct = Math.min(100, ((state.xp - prevMin) / (nextLv.min - prevMin)) * 100);
+
+  document.getElementById('xpVal').textContent = state.xp;
+  document.getElementById('xpNext').textContent = nextLv.min || '∞';
+  document.getElementById('levelNum').textContent = lv.index;
+  document.getElementById('levelName').textContent = lv.name;
+  document.getElementById('xpAvatar').textContent = lv.index;
+  document.getElementById('xpBar').style.width = pct + '%';
+
+  // Stats
+  document.getElementById('statMissions').textContent = state.missions.filter(m => m.done).length;
+  document.getElementById('statNotes').textContent = state.notes.length;
+  document.getElementById('statObjects').textContent = state.objCount;
+  document.getElementById('statStreak').textContent = state.streak;
+
+  // Badges
+  checkBadges();
+}
+
+function checkBadges() {
+  const earned = state.badges;
+  if (state.notes.length >= 1 && !earned.includes('b1')) { earned.push('b1'); document.getElementById('badge1').classList.add('earned'); }
+  if (state.missions.filter(m=>m.done).length >= 1 && !earned.includes('b2')) { earned.push('b2'); document.getElementById('badge2').classList.add('earned'); }
+  if (state.missions.filter(m=>m.done).length >= 5 && !earned.includes('b3')) { earned.push('b3'); document.getElementById('badge3').classList.add('earned'); }
+  if (state.objCount >= 1 && !earned.includes('b4')) { earned.push('b4'); document.getElementById('badge4').classList.add('earned'); }
+  if (state.level >= 3 && !earned.includes('b5')) { earned.push('b5'); document.getElementById('badge5').classList.add('earned'); }
+
+  state.badges = earned;
+  earned.forEach(b => {
+    const n = parseInt(b.replace('b',''));
+    const el = document.getElementById('badge' + n);
+    if (el) el.classList.add('earned');
+  });
+}
+
+// ========== TABS ==========
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ========== MISSIONS ==========
+const allMissions = [
+  { id: 'm1', title: 'Fotografar a caixa de papéis inteira', meta: '1 foto agora, sem organizar', time: 5, xp: 15, category: 'docs' },
+  { id: 'm2', title: 'Separar 5 papéis da caixa em 3 pilhas: Guarda / Digitaliza / Lixo', meta: '5 papéis = 1 rodada', time: 15, xp: 30, category: 'docs' },
+  { id: 'm3', title: 'Digitalizar 10 documentos no celular', meta: 'Use o app Notas ou Google Drive', time: 30, xp: 50, category: 'docs' },
+  { id: 'm4', title: 'Esvaziar e reorganizar a caixa de papéis completa', meta: 'Use as categorias do guia', time: 60, xp: 100, category: 'docs' },
+  { id: 'm5', title: 'Passar 1 nota manual para digital', meta: 'Uma nota, qualquer uma', time: 5, xp: 10, category: 'notas' },
+  { id: 'm6', title: 'Esvaziar caderno de notas pendentes', meta: 'Classifique cada uma em tarefa, pensamento ou reunião', time: 30, xp: 45, category: 'notas' },
+  { id: 'm7', title: 'Agendar 1 exame médico pendente', meta: 'Ligue ou envie mensagem agora', time: 5, xp: 25, category: 'saude' },
+  { id: 'm8', title: 'Criar pasta "Saúde 2025" no celular', meta: 'Fotos de exames, receitas, comprovantes', time: 5, xp: 10, category: 'saude' },
+  { id: 'm9', title: 'Decidir 3 objetos com o Decisor', meta: 'Fica, conserta ou descarta', time: 15, xp: 35, category: 'objetos' },
+  { id: 'm10', title: 'Criar as 4 caixas do guardaroupa', meta: 'Fica / Conserto / Doe / Descarte', time: 30, xp: 50, category: 'roupa' },
+  { id: 'm11', title: 'Virar todos os cabides de uma seção', meta: 'Método cabide invertido', time: 15, xp: 20, category: 'roupa' },
+  { id: 'm12', title: 'Esvaziar e montar 1 gaveta com sistema', meta: 'Divida por tipo ou frequência de uso', time: 30, xp: 45, category: 'roupa' },
+];
+
+let currentTimeFilter = 'all';
+
+function renderMissions() {
+  const list = document.getElementById('missionList');
+  const filtered = currentTimeFilter === 'all'
+    ? allMissions
+    : allMissions.filter(m => m.time <= parseInt(currentTimeFilter));
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏱️</div>Nenhuma missão nesse tempo. Tente um filtro maior.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(m => {
+    const done = state.missions.find(x => x.id === m.id)?.done;
+    return `
+      <div class="mission-card ${done ? 'done' : ''}" onclick="toggleMission('${m.id}')">
+        <div class="mission-check">${done ? '✓' : ''}</div>
+        <div class="mission-body">
+          <div class="mission-title">${m.title}</div>
+          <div class="mission-meta">⏱ ${m.time} min · ${m.meta}</div>
+        </div>
+        <div class="mission-xp">+${m.xp} XP</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterTime(val, btn) {
+  currentTimeFilter = val;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMissions();
+}
+
+function toggleMission(id) {
+  const existing = state.missions.find(m => m.id === id);
+  if (existing && existing.done) return; // já feita
+
+  if (!existing) state.missions.push({ id, done: false });
+  const m = state.missions.find(x => x.id === id);
+  m.done = true;
+
+  const template = allMissions.find(x => x.id === id);
+  addXP(template.xp);
+  save();
+  renderMissions();
+}
+
+// ========== NOTES ==========
+let currentNoteType = 'task';
+
+function selectNoteType(type, btn) {
+  currentNoteType = type;
+  document.querySelectorAll('.note-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+const typeLabels = {
+  task: { label: 'TAREFA', cls: 'tag-task' },
+  thought: { label: 'PENSAMENTO', cls: 'tag-thought' },
+  meeting: { label: 'REUNIÃO', cls: 'tag-meeting' },
+  note: { label: 'NOTA', cls: 'tag-note' },
+};
+
+function addNote() {
+  const input = document.getElementById('noteInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  state.notes.unshift({ type: currentNoteType, text, id: Date.now() });
+  input.value = '';
+  addXP(10);
+  save();
+  renderNotes();
+}
+
+function deleteNote(id) {
+  state.notes = state.notes.filter(n => n.id !== id);
+  save();
+  renderNotes();
+  updateXPUI();
+}
+
+function renderNotes() {
+  const list = document.getElementById('notesList');
+  if (state.notes.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div>Nenhuma nota ainda. Comece capturando qualquer coisa.</div>';
+    return;
+  }
+
+  list.innerHTML = state.notes.map(n => {
+    const t = typeLabels[n.type];
+    return `
+      <div class="note-item">
+        <span class="note-tag ${t.cls}">${t.label}</span>
+        <span class="note-text">${n.text}</span>
+        <button class="note-del" onclick="deleteNote(${n.id})">×</button>
+      </div>
+    `;
+  }).join('');
+
+  updateXPUI();
+}
+
+// ========== DOCUMENTS ==========
+const docData = [
+  {
+    cat: '🪪 Identidade & Civil',
+    items: [
+      { name: 'RG, CPF, Passaporte', time: 'Permanente', cls: 'time-perm' },
+      { name: 'Certidão de nascimento / casamento', time: 'Permanente', cls: 'time-perm' },
+      { name: 'Título de eleitor', time: 'Permanente', cls: 'time-perm' },
+      { name: 'CNH', time: 'Permanente', cls: 'time-perm' },
+    ]
+  },
+  {
+    cat: '🎓 Formação & Diplomas',
+    items: [
+      { name: 'Diplomas e certificados', time: 'Permanente', cls: 'time-perm' },
+      { name: 'Históricos escolares', time: 'Permanente', cls: 'time-perm' },
+      { name: 'Cursos e especializações', time: '10 anos', cls: 'time-long' },
+    ]
+  },
+  {
+    cat: '💰 Financeiro & Fiscal',
+    items: [
+      { name: 'Declaração de IR', time: '5 anos', cls: 'time-long' },
+      { name: 'Comprovantes bancários', time: '5 anos', cls: 'time-long' },
+      { name: 'Notas fiscais de bens duráveis', time: 'Enquanto tiver o bem', cls: 'time-mid' },
+      { name: 'Contas de água, luz, gás, telefone', time: '3 anos', cls: 'time-mid' },
+      { name: 'Recibos de aluguel', time: '3 anos', cls: 'time-mid' },
+    ]
+  },
+  {
+    cat: '🏠 Imóvel & Veículo',
+    items: [
+      { name: 'Escritura do imóvel', time: 'Permanente', cls: 'time-perm' },
+      { name: 'IPTU', time: '5 anos', cls: 'time-long' },
+      { name: 'Contrato de aluguel', time: '3 anos após término', cls: 'time-mid' },
+      { name: 'Documentos do veículo', time: 'Enquanto tiver', cls: 'time-mid' },
+      { name: 'Multas e pagamentos de veículo', time: '5 anos', cls: 'time-long' },
+    ]
+  },
+  {
+    cat: '💼 Trabalhista',
+    items: [
+      { name: 'Carteira de trabalho (CTPS)', time: 'Permanente', cls: 'time-perm' },
+      { name: 'Contracheques', time: '5 anos', cls: 'time-long' },
+      { name: 'Rescisão / FGTS', time: '30 anos (FGTS)', cls: 'time-perm' },
+      { name: 'Contratos de prestação de serviço', time: '5 anos após fim', cls: 'time-long' },
+    ]
+  },
+  {
+    cat: '🩺 Saúde',
+    items: [
+      { name: 'Exames de rotina', time: '5 anos (últimos)', cls: 'time-long' },
+      { name: 'Exames especializados / imagem', time: 'Permanente', cls: 'time-perm' },
+      { name: 'Receitas medicamento contínuo', time: '3 anos', cls: 'time-mid' },
+      { name: 'Cartão de vacinas', time: 'Permanente', cls: 'time-perm' },
+    ]
+  },
+  {
+    cat: '📦 Pode Descartar',
+    items: [
+      { name: 'Contas pagas há mais de 5 anos (serviços básicos)', time: 'Descarte', cls: 'time-short' },
+      { name: 'Propagandas, manuais sem produto', time: 'Descarte', cls: 'time-short' },
+      { name: 'Exames de rotina com mais de 5 anos', time: 'Descarte', cls: 'time-short' },
+      { name: 'Recibos de compras comuns', time: 'Após garantia', cls: 'time-short' },
+    ]
+  },
+];
+
+function renderDocs() {
+  const grid = document.getElementById('docGrid');
+  grid.innerHTML = docData.map((cat, i) => `
+    <div class="doc-category" id="doccat${i}">
+      <div class="doc-category-header" onclick="toggleDocCat(${i})">
+        <span class="doc-cat-icon">${cat.cat.split(' ')[0]}</span>
+        <span class="doc-cat-title">${cat.cat.substring(2)}</span>
+        <span class="doc-cat-chevron">▼</span>
+      </div>
+      <div class="doc-category-body">
+        ${cat.items.map(item => `
+          <div class="doc-item">
+            <span class="doc-item-name">${item.name}</span>
+            <span class="doc-time ${item.cls}">${item.time}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDocCat(i) {
+  document.getElementById('doccat' + i).classList.toggle('open');
+}
+
+// ========== OBJECT FLOW ==========
+const objFlow = [
+  {
+    q: "Você usou esse objeto pelo menos 1 vez nos últimos 3 meses?",
+    s: { sim: 'next', nao: 'nao-uso' }
+  },
+  {
+    q: "Ele está em condições de uso confortável, sem reparo urgente?",
+    s: { sim: 'guardar', nao: 'consertar-check' }
+  },
+  {
+    q: "O custo do conserto é menor que 40% de um item novo equivalente?",
+    s: { sim: 'consertar', nao: 'descartar' }
+  }
+];
+
+const objResults = {
+  guardar: {
+    emoji: '✅',
+    action: 'GUARDAR',
+    why: 'Você usa, está em bom estado. Faz sentido manter. Certifique-se de que tem um lugar fixo para ele no seu espaço.'
+  },
+  consertar: {
+    emoji: '🔧',
+    action: 'CONSERTAR',
+    why: 'O conserto compensa financeiramente e você usa o item. Defina um prazo de 2 semanas para levar ao conserto — se não levar nesse prazo, descarte.'
+  },
+  descartar: {
+    emoji: '🗑️',
+    action: 'DESCARTAR / DOAR',
+    why: 'O conserto não compensa. Segure o objeto por mais uma semana se quiser — mas o mais provável é que você já sabia dessa resposta. Libere o espaço.'
+  },
+  'nao-uso': {
+    emoji: '💙',
+    action: 'DOAR',
+    why: 'Você não usa. Independente do estado, está ocupando espaço físico e mental. Doe para quem vai usar — esse é um ato generoso, não uma perda.'
+  },
+  'consertar-check': {
+    emoji: '🔍',
+    action: 'VERIFICAR CONSERTO',
+    why: 'Está em uso mas precisa de reparo. Descubra o custo do conserto antes de decidir guardar ou descartar.'
+  }
+};
+
+let objStep = 0;
+let objCurrentName = '';
+
+function startObjFlow() {
+  const name = document.getElementById('objName').value.trim();
+  if (!name) return;
+  objCurrentName = name;
+  objStep = 0;
+  document.getElementById('objResultCard').style.display = 'none';
+  document.getElementById('objQuestionCard').style.display = 'block';
+  renderObjQuestion();
+}
+
+function renderObjQuestion() {
+  const q = objFlow[objStep];
+  document.getElementById('objQText').textContent = `"${objCurrentName}" — ${q.q}`;
+  const answers = document.getElementById('objAnswers');
+  answers.innerHTML = `
+    <button class="obj-ans-btn" onclick="answerObj('sim')">✓ Sim</button>
+    <button class="obj-ans-btn" onclick="answerObj('nao')">✗ Não</button>
+  `;
+}
+
+function answerObj(ans) {
+  const q = objFlow[objStep];
+  const next = q.s[ans];
+
+  if (next === 'next') {
+    objStep++;
+    renderObjQuestion();
+  } else {
+    showObjResult(next);
+  }
+}
+
+function showObjResult(key) {
+  const r = objResults[key];
+  document.getElementById('objQuestionCard').style.display = 'none';
+  const rc = document.getElementById('objResultCard');
+  rc.style.display = 'block';
+  document.getElementById('objResultEmoji').textContent = r.emoji;
+  document.getElementById('objResultAction').textContent = r.action;
+  document.getElementById('objResultWhy').textContent = r.why;
+
+  state.objCount++;
+  addXP(20);
+  save();
+  updateXPUI();
+}
+
+function resetObj() {
+  document.getElementById('objName').value = '';
+  document.getElementById('objResultCard').style.display = 'none';
+  document.getElementById('objQuestionCard').style.display = 'none';
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ========== AUTH SYSTEM ==========
+// Users stored as: { name, passHash, role: 'admin'|'user' }
+// Simple hash to avoid plaintext (not cryptographic, but hides casual snooping)
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash.toString(36);
+}
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem('otUsers') || '[]'); } catch(e) { return []; }
+}
+
+function saveUsers(users) {
+  localStorage.setItem('otUsers', JSON.stringify(users));
+}
+
+function getCurrentUser() {
+  try { return JSON.parse(sessionStorage.getItem('otCurrentUser') || 'null'); } catch(e) { return null; }
+}
+
+function setCurrentUser(user) {
+  sessionStorage.setItem('otCurrentUser', JSON.stringify(user));
+}
+
+// Init auth on load
+function initAuth() {
+  const users = getUsers();
+  const current = getCurrentUser();
+
+  if (current) {
+    // Already logged in this session
+    showApp(current);
+    return;
+  }
+
+  if (users.length === 0) {
+    // No users yet — show setup
+    document.getElementById('authSetup').style.display = 'block';
+    document.getElementById('authLogin').style.display = 'none';
+  } else {
+    // Show login
+    document.getElementById('authSetup').style.display = 'none';
+    document.getElementById('authLogin').style.display = 'block';
+  }
+
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+function setupAccount() {
+  const name = document.getElementById('setupName').value.trim();
+  const pass = document.getElementById('setupPass').value;
+  const pass2 = document.getElementById('setupPass2').value;
+  const err = document.getElementById('setupError');
+
+  if (!name) { err.textContent = 'Insira seu nome.'; return; }
+  if (pass.length < 4) { err.textContent = 'Senha deve ter pelo menos 4 caracteres.'; return; }
+  if (pass !== pass2) { err.textContent = 'As senhas não coincidem.'; return; }
+
+  const users = getUsers();
+  const newUser = { name, passHash: simpleHash(pass), role: 'admin' };
+  users.push(newUser);
+  saveUsers(users);
+  setCurrentUser(newUser);
+  err.textContent = '';
+  showApp(newUser);
+}
+
+function doLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+
+  if (!name || !pass) { err.textContent = 'Preencha nome e senha.'; return; }
+
+  const users = getUsers();
+  const hash = simpleHash(pass);
+  const found = users.find(u => u.name.toLowerCase() === name.toLowerCase() && u.passHash === hash);
+
+  if (!found) { err.textContent = 'Nome ou senha incorretos.'; return; }
+
+  setCurrentUser(found);
+  err.textContent = '';
+  showApp(found);
+}
+
+function doLogout() {
+  sessionStorage.removeItem('otCurrentUser');
+  location.reload();
+}
+
+function showApp(user) {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('userBadgeName').textContent = '👤 ' + user.name;
+  const badge = document.getElementById('userBadge');
+  badge.classList.add('visible');
+  if (user.role === 'admin') {
+    document.getElementById('adminBtn').style.display = 'inline-block';
+  }
+  // Boot app
+  renderMissions();
+  renderNotes();
+  renderDocs();
+  updateXPUI();
+}
+
+// ========== ADMIN PANEL ==========
+function openAdmin() {
+  const user = getCurrentUser();
+  if (!user || user.role !== 'admin') return;
+  renderAdminUsers();
+  document.getElementById('adminPanel').classList.add('open');
+}
+
+function closeAdmin() {
+  document.getElementById('adminPanel').classList.remove('open');
+}
+
+function renderAdminUsers() {
+  const users = getUsers();
+  const current = getCurrentUser();
+  const list = document.getElementById('adminUserList');
+  if (users.length === 0) {
+    list.innerHTML = '<div style="color:#7a6e5e;font-size:13px;padding:10px 0">Nenhuma usuária cadastrada.</div>';
+    return;
+  }
+  list.innerHTML = users.map((u, i) => `
+    <div class="user-item">
+      <span class="user-item-name">${u.name}</span>
+      <span class="user-item-role ${u.role === 'admin' ? 'role-admin' : 'role-user'}">${u.role === 'admin' ? 'ADMIN' : 'USUÁRIA'}</span>
+      ${u.name !== current.name ? `<button class="user-del-btn" onclick="removeUser(${i})" title="Remover">×</button>` : '<span style="width:26px"></span>'}
+    </div>
+  `).join('');
+}
+
+function addUser() {
+  const name = document.getElementById('newUserName').value.trim();
+  const pass = document.getElementById('newUserPass').value;
+  const role = document.getElementById('newUserRole').value;
+  const err = document.getElementById('adminError');
+
+  if (!name) { err.textContent = 'Insira um nome.'; return; }
+  if (pass.length < 4) { err.textContent = 'Senha deve ter pelo menos 4 caracteres.'; return; }
+
+  const users = getUsers();
+  if (users.find(u => u.name.toLowerCase() === name.toLowerCase())) {
+    err.textContent = 'Já existe uma usuária com esse nome.'; return;
+  }
+
+  users.push({ name, passHash: simpleHash(pass), role });
+  saveUsers(users);
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserPass').value = '';
+  err.textContent = '';
+  renderAdminUsers();
+}
+
+function removeUser(index) {
+  const users = getUsers();
+  users.splice(index, 1);
+  saveUsers(users);
+  renderAdminUsers();
+}
+
+// ========== INIT ==========
+initAuth();
+</script>
+</body>
+</html>
